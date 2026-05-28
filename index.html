@@ -544,6 +544,253 @@
             .details-grid { grid-template-columns: 1fr; }
             .message { max-width: 85%; }
         }
+        /* ==================== Landing Page Styles ==================== */
+.landing-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #0a2e1a, #0a1f12);
+    position: relative;
+}
+
+/* إضافة نمط خيمة كخلفية زخرفية */
+.landing-container::before {
+    content: "🏕️";
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    font-size: 120px;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.landing-container::after {
+    content: "⛰️";
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 100px;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 700px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 40px;
+    padding: 50px 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    animation: fadeInUp 0.8s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logo-large i {
+    font-size: 70px;
+    color: #d4a017;
+    margin-bottom: 15px;
+}
+
+.logo-large h1 {
+    font-size: 32px;
+    color: #1a472a;
+    margin-bottom: 10px;
+}
+
+.logo-large p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #d4a017;
+    display: inline-block;
+}
+
+.welcome-message {
+    background: linear-gradient(135deg, #1a472a, #0d2818);
+    padding: 25px;
+    border-radius: 25px;
+    margin: 20px 0;
+    color: white;
+}
+
+.welcome-message i {
+    font-size: 50px;
+    color: #d4a017;
+    margin-bottom: 10px;
+}
+
+.welcome-message h2 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.welcome-message h3 {
+    font-size: 20px;
+    color: #d4a017;
+    margin-bottom: 15px;
+}
+
+.welcome-message p {
+    font-size: 15px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.login-landing-btn {
+    background: linear-gradient(135deg, #d4a017, #b8860b);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.login-landing-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(212, 160, 23, 0.4);
+}
+
+.rules-section {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 50px 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.rules-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+}
+
+.rules-card {
+    background: white;
+    border-radius: 25px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    border-right: 5px solid #d4a017;
+}
+
+.rules-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.rules-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.rules-header i {
+    font-size: 32px;
+    color: #d4a017;
+}
+
+.rules-header h3 {
+    font-size: 22px;
+    color: #1a472a;
+}
+
+.rules-list {
+    list-style: none;
+    padding: 0;
+}
+
+.rules-list li {
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+}
+
+.rules-list li i {
+    color: #2ecc71;
+    font-size: 14px;
+    width: 20px;
+}
+
+.footer-landing {
+    background: rgba(13, 40, 24, 0.95);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 20px;
+    text-align: center;
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+}
+
+.footer-landing p {
+    margin: 5px 0;
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        padding: 30px 20px;
+    }
+    
+    .logo-large h1 {
+        font-size: 24px;
+    }
+    
+    .welcome-message h2 {
+        font-size: 20px;
+    }
+    
+    .login-landing-btn {
+        padding: 12px 30px;
+        font-size: 18px;
+    }
+    
+    .rules-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .rules-card {
+        margin: 0 15px;
+    }
+}
     </style>
 </head>
 <body>
@@ -2313,7 +2560,83 @@ function viewNewTasks() {
             loadMemberMessages();
             showToast('تم إرسال الرسالة');
         }
-
+// دالة عرض صفحة الهبوط الرئيسية
+function renderLandingPage() {
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div class="landing-container">
+            <div class="hero-section">
+                <div class="hero-content">
+                    <div class="logo-large">
+                        <i class="fas fa-campground"></i>
+                        <h1>نظام الكشاف المتكامل</h1>
+                        <p>نظام إدارة الطلايع والكشافة - متزامن مع Firebase Cloud</p>
+                    </div>
+                    
+                    <div class="welcome-message">
+                        <i class="fas fa-user-graduate"></i>
+                        <h2>مساعدة في المنهج التعليمي</h2>
+                        <h3>الأستاذ سامي الملح</h3>
+                        <p>سواء كنت طالبًا في ثانوي عام أو إزهري، أو تستعد للمحاضرات الهامة، فأنت في المكان المناسب لتحقيق التميز والتفوق.</p>
+                    </div>
+                    
+                    <button class="login-landing-btn" onclick="goToLoginPage()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        تسجيل الدخول
+                    </button>
+                </div>
+            </div>
+            
+            <div class="rules-section">
+                <div class="rules-grid">
+                    <div class="rules-card">
+                        <div class="rules-header">
+                            <i class="fas fa-check-circle"></i>
+                            <h3>شروط الانضمام</h3>
+                        </div>
+                        <ul class="rules-list">
+                            <li><i class="fas fa-check"></i> أن يكون عمر المتقدم بين 6 و 30 سنة</li>
+                            <li><i class="fas fa-check"></i> اجتياز المقابلة الشخصية بنجاح</li>
+                            <li><i class="fas fa-check"></i> الالتزام بقانون وقيم الكشافة</li>
+                            <li><i class="fas fa-check"></i> حضور التدريبات والاجتماعات الدورية</li>
+                            <li><i class="fas fa-check"></i> دفع الاشتراك السنوي المقرر</li>
+                            <li><i class="fas fa-check"></i> تقديم ولي أمر (للقصر) موافقة خطية</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="rules-card">
+                        <div class="rules-header">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>تعليمات هامة</h3>
+                        </div>
+                        <ul class="rules-list">
+                            <li><i class="fas fa-check"></i> الالتزام بالزي الرسمي أثناء الأنشطة</li>
+                            <li><i class="fas fa-check"></i> احترام القادة والزملاء</li>
+                            <li><i class="fas fa-check"></i> المحافظة على ممتلكات الطليعة</li>
+                            <li><i class="fas fa-check"></i> المشاركة الفعالة في الفعاليات</li>
+                            <li><i class="fas fa-check"></i> إنجاز التكاليف في الموعد المحدد</li>
+                            <li><i class="fas fa-check"></i> تطوير المهارات القيادية والكشفية</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-landing">
+                <p>© 2025 نظام الكشاف - Tecno Shark Company | 01144100018 / 01126125881</p>
+                <p><i class="fas fa-cloud"></i> متزامن مع Firebase Cloud</p>
+            </div>
+        </div>
+    `;
+}
+// دالة الانتقال إلى صفحة تسجيل الدخول
+function goToLoginPage() {
+    // حفظ الجلسة
+    sessionStorage.setItem('scoutSession', 'active');
+    sessionStorage.setItem('scoutSessionTime', Date.now().toString());
+    
+    // إعادة تحميل الصفحة لبدء التطبيق
+    location.reload();
+}
         function renderMemberTasks() {
     const container = document.getElementById('memberPageContent');
     
@@ -2505,16 +2828,27 @@ window.showJoinRequestsList = showJoinRequestsList;
 window.viewJoinRequestDetails = viewJoinRequestDetails;
 window.approveJoinRequest = approveJoinRequest;
 window.rejectJoinRequest = rejectJoinRequest;
-
+window.goToLoginPage = goToLoginPage;
+window.renderLandingPage = renderLandingPage;
 window.updatePendingRequestsBadge = updatePendingRequestsBadge;
         window.logout = logout;
 
         // Start the app
-        (async function start() {
-            await loadAllDataFromFirebase();
-            listenForRealTimeUpdates();
-            render();
-        })();
+(async function start() {
+    // التحقق من وجود جلسة نشطة
+    const savedSession = sessionStorage.getItem('scoutSession');
+    const sessionTime = sessionStorage.getItem('scoutSessionTime');
+    
+    if (savedSession === 'active' && sessionTime && (Date.now() - parseInt(sessionTime) < 3600000)) {
+        // جلسة نشطة خلال آخر ساعة - انتقل مباشرة للتطبيق
+        await loadAllDataFromFirebase();
+        listenForRealTimeUpdates();
+        render();
+    } else {
+        // لا توجد جلسة نشطة - عرض صفحة الهبوط
+        renderLandingPage();
+    }
+})();
     </script>
 </body>
 </html>
