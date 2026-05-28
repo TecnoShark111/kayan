@@ -602,31 +602,30 @@
             }
         }
 
-        // Load all data from Firebase
         async function loadAllDataFromFirebase() {
-            try {
-                const snapshot = await database.ref('appData').once('value');
-                const data = snapshot.val();
-                if (data) {
-                    appData.branches = data.branches || [];
-                    appData.squads = data.squads || [];
-                    appData.members = data.members || [];
-                    appData.tasks = data.tasks || [];
-                    appData.taskSubmissions = data.taskSubmissions || [];
-                    appData.messages = data.messages || [];
-                    console.log('✅ All data loaded from Firebase');
-                    return true;
-                } else {
-                    // Initialize default data if no data exists
-                    await initializeDefaultData();
-                    return true;
-                }
-            } catch (error) {
-                console.error('❌ Error loading from Firebase:', error);
-                showToast('خطأ في تحميل البيانات', 'error');
-                return false;
-            }
+    try {
+        const snapshot = await database.ref('appData').once('value');
+        const data = snapshot.val();
+        if (data) {
+            appData.branches = data.branches || [];
+            appData.squads = data.squads || [];
+            appData.members = data.members || [];
+            appData.tasks = data.tasks || [];
+            appData.taskSubmissions = data.taskSubmissions || [];
+            appData.messages = data.messages || [];
+            appData.joinRequests = data.joinRequests || [];  // <-- أضف هذا السطر
+            console.log('✅ All data loaded from Firebase');
+            return true;
+        } else {
+            await initializeDefaultData();
+            return true;
         }
+    } catch (error) {
+        console.error('❌ Error loading from Firebase:', error);
+        showToast('خطأ في تحميل البيانات', 'error');
+        return false;
+    }
+}
 
         async function initializeDefaultData() {
     const now = new Date();
@@ -660,46 +659,45 @@
         taskSubmissions: [
             { id: 1, taskId: 1, memberId: 1, status: "submitted", submittedAt: new Date().toISOString(), pointsAwarded: null, reviewedBy: null, reviewedAt: null }
         ],
-      
-members: [
-    { id: 1, code: "S001", name: "أحمد محمد", age: 16, rank: "عريف اول", username: "ahmed", password: "123456", phone: "01012345678", branchId: 1, squadId: 1, points: 150, joinedAt: new Date().toISOString() },
-    { id: 2, code: "S002", name: "محمود علي", age: 15, rank: "عريف", username: "mahmoud", password: "123456", phone: "01087654321", branchId: 1, squadId: 1, points: 120, joinedAt: new Date().toISOString() },
-    { id: 3, code: "S003", name: "كريم حسن", age: 14, rank: "سكرتير", username: "karim", password: "123456", phone: "01122334455", branchId: 1, squadId: 2, points: 90, joinedAt: new Date().toISOString() },
-    { id: 4, code: "S004", name: "يوسف إبراهيم", age: 17, rank: "امين صندوق", username: "youssef", password: "123456", phone: "01234567890", branchId: 2, squadId: 3, points: 75, joinedAt: new Date().toISOString() },
-    { id: 5, code: "S005", name: "عمر سعيد", age: 13, rank: "مساعد عريف", username: "omar", password: "123456", phone: "01555667788", branchId: 3, squadId: 4, points: 60, joinedAt: new Date().toISOString() }
-],
-        
+        messages: [],
+        joinRequests: []  // <-- أضف هذا السطر الجديد
     };
     await saveAllDataToFirebase();
 }
 
-        // Listen for real-time updates
         function listenForRealTimeUpdates() {
-            database.ref('appData').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && currentUser) {
-                    const oldMembersLength = appData.members.length;
-                    appData.branches = data.branches || [];
-                    appData.squads = data.squads || [];
-                    appData.members = data.members || [];
-                    appData.tasks = data.tasks || [];
-                    appData.taskSubmissions = data.taskSubmissions || [];
-                    appData.messages = data.messages || [];
-                    
-                    // Refresh UI if data changed
-                    if (oldMembersLength !== appData.members.length && document.getElementById('membersTable')) {
-                        renderMembersTable();
-                    }
-                    if (document.getElementById('adminPageContent')) {
-                        refreshCurrentAdminPage();
-                    }
-                    if (document.getElementById('memberPageContent')) {
-                        refreshCurrentMemberPage();
-                    }
-                    showToast('تم تحديث البيانات', 'info');
-                }
-            });
+    database.ref('appData').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data && currentUser) {
+            const oldMembersLength = appData.members.length;
+            const oldRequestsLength = appData.joinRequests.length;  // <-- أضف هذا السطر
+            appData.branches = data.branches || [];
+            appData.squads = data.squads || [];
+            appData.members = data.members || [];
+            appData.tasks = data.tasks || [];
+            appData.taskSubmissions = data.taskSubmissions || [];
+            appData.messages = data.messages || [];
+            appData.joinRequests = data.joinRequests || [];  // <-- أضف هذا السطر
+            
+            // تحديث عداد الطلبات إذا تغير
+            if (oldRequestsLength !== appData.joinRequests.length && isAdmin) {
+                updatePendingRequestsBadge();  // <-- استدعاء تحديث العداد
+                showToast(`📋 يوجد ${appData.joinRequests.filter(r => r.status === 'pending').length} طلب انضمام جديد`, 'info');
+            }
+            
+            if (oldMembersLength !== appData.members.length && document.getElementById('membersTable')) {
+                renderMembersTable();
+            }
+            if (document.getElementById('adminPageContent')) {
+                refreshCurrentAdminPage();
+            }
+            if (document.getElementById('memberPageContent')) {
+                refreshCurrentMemberPage();
+            }
+            showToast('تم تحديث البيانات', 'info');
         }
+    });
+}
 
         function refreshCurrentAdminPage() {
             const activePage = document.querySelector('.sidebar-menu li.active')?.getAttribute('data-page');
@@ -754,58 +752,287 @@ members: [
             }
         }
 
-        // ==================== LOGIN ====================
         function renderLogin(container) {
-            container.innerHTML = `
-                <div class="login-container">
-                    <div class="login-box">
-                        <i class="fas fa-campground"></i>
-                        <h2>نظام الكشاف</h2>
-                        <p style="color: #666; margin-bottom: 25px;">نظام إدارة الطلايع والكشافة - Firebase Cloud</p>
-                        <form id="loginForm">
-                            <div class="input-group">
-                                <input type="text" id="username" placeholder="اسم المستخدم" required>
-                            </div>
-                            <div class="input-group">
-                                <input type="password" id="password" placeholder="كلمة المرور" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">تسجيل الدخول</button>
-                        </form>
-                       <div style="margin-top: 20px; font-size: 12px; color: #999;">
-                            <i class="fas fa-key"></i> تم التطوير بواسطة ::Tecno Shark Company
-                            <i ></i>01144100018||01126125881
-                        </div>
+    container.innerHTML = `
+        <div class="login-container">
+            <div class="login-box">
+                <i class="fas fa-campground"></i>
+                <h2>نظام الكشاف</h2>
+                <p style="color: #666; margin-bottom: 25px;">نظام إدارة الطلايع والكشافة - Firebase Cloud</p>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <input type="text" id="username" placeholder="اسم المستخدم" required>
                     </div>
-                </div>
-            `;
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
+                    <div class="input-group">
+                        <input type="password" id="password" placeholder="كلمة المرور" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">تسجيل الدخول</button>
+                </form>
                 
-                if (username === 'Kayan' && password === 'Kayan123') {
-                    currentUser = { id: 'admin', name: 'القائد العام', isAdmin: true };
-                    isAdmin = true;
-                    await loadAllDataFromFirebase();
-                    listenForRealTimeUpdates();
-                    showToast('مرحباً أيها القائد!');
-                    render();
-                } else {
-                    const member = appData.members.find(m => m.username === username && m.password === password);
-                    if (member) {
-                        currentUser = member;
-                        isAdmin = false;
-                        await loadAllDataFromFirebase();
-                        listenForRealTimeUpdates();
-                        showToast(`مرحباً ${member.name}`);
-                        render();
-                    } else {
-                        showToast('بيانات الدخول غير صحيحة', 'error');
-                    }
-                }
-            });
+                <!-- زر تقديم طلب انضمام جديد -->
+                <div style="margin-top: 15px;">
+                    <button onclick="showJoinRequestModal()" class="btn btn-success" style="width: 100%; justify-content: center; background: #2ecc71;">
+                        <i class="fas fa-user-plus"></i> تقديم طلب انضمام جديد
+                    </button>
+                </div>
+                
+                <div style="margin-top: 20px; font-size: 12px; color: #999;">
+                    <i class="fas fa-key"></i> تم التطوير بواسطة ::Tecno Shark Company
+                    <i ></i>01144100018||01126125881
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        if (username === 'Kayan' && password === 'Kayan123') {
+            currentUser = { id: 'admin', name: 'القائد العام', isAdmin: true };
+            isAdmin = true;
+            await loadAllDataFromFirebase();
+            listenForRealTimeUpdates();
+            showToast('مرحباً أيها القائد!');
+            render();
+        } else {
+            const member = appData.members.find(m => m.username === username && m.password === password);
+            if (member) {
+                currentUser = member;
+                isAdmin = false;
+                await loadAllDataFromFirebase();
+                listenForRealTimeUpdates();
+                showToast(`مرحباً ${member.name}`);
+                render();
+            } else {
+                showToast('بيانات الدخول غير صحيحة', 'error');
+            }
         }
+    });
+}
+// ==================== الدوال الجديدة لنظام طلبات الانضمام ====================
 
+// 1. دالة عرض نموذج طلب انضمام جديد للعضو (تظهر في شاشة تسجيل الدخول)
+function showJoinRequestModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> تقديم طلب انضمام جديد</h3>
+                <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            <form id="joinRequestForm">
+                <div class="input-group"><label>الاسم الكامل</label><input type="text" id="reqName" required></div>
+                <div class="input-group"><label>السن</label><input type="number" id="reqAge" min="6" max="30" required></div>
+                <div class="input-group"><label>رقم الهاتف</label><input type="tel" id="reqPhone" required></div>
+                <div class="input-group"><label>الرتبة المطلوبة</label>
+                    <select id="reqRank" required>
+                        <option value="">اختر الرتبة</option>
+                        <option value="عريف اول">عريف اول</option>
+                        <option value="عريف">عريف</option>
+                        <option value="سكرتير">سكرتير</option>
+                        <option value="امين صندوق">امين صندوق</option>
+                        <option value="مساعد عريف اول">مساعد عريف اول</option>
+                        <option value="مساعد عريف">مساعد عريف</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>المنطقة</label><select id="reqBranch">${appData.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
+                <div class="input-group"><label>الطليعة المرغوب الانضمام إليها</label><select id="reqSquad">${appData.squads.filter(s => s.isOpen).map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+                <div class="input-group"><label>اسم المستخدم (للدخول)</label><input type="text" id="reqUsername" required></div>
+                <div class="input-group"><label>كلمة المرور</label><input type="password" id="reqPassword" required></div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">إرسال الطلب للقائد</button>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('joinRequestForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('reqUsername').value;
+        if (appData.members.some(m => m.username === username)) {
+            showToast('اسم المستخدم موجود مسبقاً لدى عضو', 'error');
+            return;
+        }
+        if (appData.joinRequests.some(r => r.username === username && r.status === 'pending')) {
+            showToast('هذا الاسم موجود في طلب سابق لا يزال قيد المراجعة', 'error');
+            return;
+        }
+        
+        const newRequest = {
+            id: Date.now(),
+            name: document.getElementById('reqName').value,
+            age: parseInt(document.getElementById('reqAge').value),
+            phone: document.getElementById('reqPhone').value,
+            rank: document.getElementById('reqRank').value,
+            branchId: parseInt(document.getElementById('reqBranch').value),
+            squadId: parseInt(document.getElementById('reqSquad').value),
+            username: username,
+            password: document.getElementById('reqPassword').value,
+            status: 'pending',
+            requestedAt: new Date().toISOString(),
+            code: `KS${String(appData.members.length + 1).padStart(3, '0')}`
+        };
+        
+        appData.joinRequests.push(newRequest);
+        await saveAllDataToFirebase();
+        showToast('تم إرسال طلب الانضمام إلى القائد، انتظر الموافقة');
+        modal.remove();
+    });
+}
+
+// 2. دالة عرض قائمة طلبات الانضمام للقائد
+function showJoinRequestsList() {
+    const pendingRequests = appData.joinRequests.filter(r => r.status === 'pending');
+    
+    if (pendingRequests.length === 0) {
+        showToast('لا توجد طلبات انضمام معلقة حالياً', 'info');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:700px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-users"></i> طلبات الانضمام المعلقة (${pendingRequests.length})</h3>
+                <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            <div style="max-height:500px; overflow-y:auto;">
+                ${pendingRequests.map(req => {
+                    const branch = appData.branches.find(b => b.id === req.branchId);
+                    const squad = appData.squads.find(s => s.id === req.squadId);
+                    return `
+                        <div style="background:#f8f9fa; padding:15px; border-radius:12px; margin-bottom:10px; border-right:3px solid #d4a017;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                                <div>
+                                    <strong>${escapeHtml(req.name)}</strong><br>
+                                    <small>📞 ${req.phone} | ${req.age} سنة</small><br>
+                                    <small>🏴 ${squad?.name || '-'} | 🏢 ${branch?.name || '-'}</small><br>
+                                    <small>👤 اسم المستخدم: ${req.username}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-info" onclick="viewJoinRequestDetails(${req.id})">
+                                        <i class="fas fa-eye"></i> تفاصيل
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// 3. دالة عرض تفاصيل طلب الانضمام للقائد (قبول أو رفض)
+function viewJoinRequestDetails(requestId) {
+    const request = appData.joinRequests.find(r => r.id === requestId);
+    if (!request) return;
+    
+    const branch = appData.branches.find(b => b.id === request.branchId);
+    const squad = appData.squads.find(s => s.id === request.squadId);
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-id-card"></i> تفاصيل طلب الانضمام: ${request.name}</h3>
+                <span class="close-modal" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            <div class="details-grid">
+                <div class="detail-item"><div class="detail-label">الاسم الكامل</div><div class="detail-value">${request.name}</div></div>
+                <div class="detail-item"><div class="detail-label">السن</div><div class="detail-value">${request.age}</div></div>
+                <div class="detail-item"><div class="detail-label">رقم الهاتف</div><div class="detail-value">${request.phone}</div></div>
+                <div class="detail-item"><div class="detail-label">الرتبة المطلوبة</div><div class="detail-value">${request.rank}</div></div>
+                <div class="detail-item"><div class="detail-label">المنطقة</div><div class="detail-value">${branch?.name || '-'}</div></div>
+                <div class="detail-item"><div class="detail-label">الطليعة</div><div class="detail-value">${squad?.name || '-'}</div></div>
+                <div class="detail-item"><div class="detail-label">اسم المستخدم</div><div class="detail-value">${request.username}</div></div>
+                <div class="detail-item"><div class="detail-label">كلمة المرور</div><div class="detail-value">••••••</div></div>
+                <div class="detail-item"><div class="detail-label">تاريخ الطلب</div><div class="detail-value">${new Date(request.requestedAt).toLocaleString('ar-EG')}</div></div>
+            </div>
+            <div style="display:flex; gap:15px; justify-content:center; margin-top:20px;">
+                <button class="btn btn-success" onclick="approveJoinRequest(${requestId})">
+                    <i class="fas fa-check"></i> قبول العضو
+                </button>
+                <button class="btn btn-danger" onclick="rejectJoinRequest(${requestId})">
+                    <i class="fas fa-ban"></i> رفض / حظر
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// 4. دالة قبول طلب الانضمام وإضافة العضو إلى قاعدة البيانات
+async function approveJoinRequest(requestId) {
+    const request = appData.joinRequests.find(r => r.id === requestId);
+    if (!request) return;
+    
+    const newMember = {
+        id: Date.now(),
+        code: request.code,
+        name: request.name,
+        age: request.age,
+        rank: request.rank,
+        username: request.username,
+        password: request.password,
+        phone: request.phone,
+        branchId: request.branchId,
+        squadId: request.squadId,
+        points: 0,
+        joinedAt: new Date().toISOString()
+    };
+    
+    appData.members.push(newMember);
+    appData.joinRequests = appData.joinRequests.filter(r => r.id !== requestId);
+    
+    await saveAllDataToFirebase();
+    document.querySelectorAll('.modal').forEach(m => m.remove());
+    showToast(`✅ تم قبول ${request.name} وأضيف إلى الطليعة بنجاح`);
+    
+    if (isAdmin && document.getElementById('adminPageContent')) {
+        renderMembersTable();
+        renderAdminDashboard();
+    }
+}
+
+// 5. دالة رفض طلب الانضمام (حذف الطلب)
+async function rejectJoinRequest(requestId) {
+    const request = appData.joinRequests.find(r => r.id === requestId);
+    if (!request) return;
+    
+    appData.joinRequests = appData.joinRequests.filter(r => r.id !== requestId);
+    await saveAllDataToFirebase();
+    document.querySelectorAll('.modal').forEach(m => m.remove());
+    showToast(`❌ تم رفض طلب ${request.name}`);
+    
+    if (isAdmin && document.getElementById('adminPageContent')) {
+        renderMembersTable();
+        renderAdminDashboard();
+    }
+}
+
+// 6. دالة تحديث عداد الطلبات المعلقة في لوحة التحكم
+function updatePendingRequestsBadge() {
+    const pendingCount = appData.joinRequests.filter(r => r.status === 'pending').length;
+    const badgeElement = document.getElementById('pendingRequestsBadge');
+    if (badgeElement) {
+        if (pendingCount > 0) {
+            badgeElement.style.display = 'inline-block';
+            badgeElement.textContent = pendingCount;
+        } else {
+            badgeElement.style.display = 'none';
+        }
+    }
+}
         // ==================== ADMIN APP ====================
         function renderAdminApp(container) {
             container.innerHTML = `
@@ -851,14 +1078,18 @@ members: [
             closeSidebar();
         }
 
-       function renderAdminDashboard() {
+      function renderAdminDashboard() {
+    const pendingRequestsCount = appData.joinRequests.filter(r => r.status === 'pending').length;
+    
     const stats = {
         members: appData.members.length,
         squads: appData.squads.length,
         branches: appData.branches.length,
         tasks: appData.tasks.length,
-        pendingSubmissions: appData.taskSubmissions.filter(ts => ts.status === 'submitted' && !ts.pointsAwarded).length
+        pendingSubmissions: appData.taskSubmissions.filter(ts => ts.status === 'submitted' && !ts.pointsAwarded).length,
+        pendingRequests: pendingRequestsCount  // <-- أضف هذا السطر
     };
+    
     const container = document.getElementById('adminPageContent');
     container.innerHTML = `
         <div class="stats-grid">
@@ -867,6 +1098,14 @@ members: [
             <div class="stat-card"><i class="fas fa-building"></i><div class="number">${stats.branches}</div><div class="label">المناطق</div></div>
             <div class="stat-card"><i class="fas fa-tasks"></i><div class="number">${stats.tasks}</div><div class="label">التكاليف</div></div>
             <div class="stat-card"><i class="fas fa-clock"></i><div class="number">${stats.pendingSubmissions}</div><div class="label">تسليمات معلقة</div></div>
+            
+            <!-- بطاقة طلبات الانضمام المعلقة -->
+            <div class="stat-card" style="cursor: pointer;" onclick="showJoinRequestsList()">
+                <i class="fas fa-user-plus"></i>
+                <div class="number" style="color: ${stats.pendingRequests > 0 ? '#e74c3c' : '#2ecc71'};">${stats.pendingRequests}</div>
+                <div class="label">طلبات انضمام معلقة</div>
+                ${stats.pendingRequests > 0 ? '<span class="badge" style="background:#e74c3c; margin-top:5px;">اضغط للمراجعة</span>' : ''}
+            </div>
         </div>
         <div class="card">
             <h3><i class="fas fa-trophy"></i> ترتيب الطلايع بالنقاط</h3>
@@ -878,10 +1117,10 @@ members: [
         </div>
     `;
     
-    // استدعاء الدوال الجديدة
     renderSquadRankingCard();
     renderActiveTasksCard();
     startCountdownUpdater();
+    updatePendingRequestsBadge();
 }
 // ==================== دوال ترتيب الطلايع (نسخة مبسطة وعملية) ====================
 
@@ -1162,23 +1401,31 @@ function canSubmitTask(taskId) {
     const endDate = new Date(task.endDate);
     return now <= endDate;
 }
-        // ==================== ADMIN MEMBERS ====================
-        function renderAdminMembers() {
-            const container = document.getElementById('adminPageContent');
-            container.innerHTML = `
-                <div class="card">
-                    <h3><i class="fas fa-search"></i> البحث عن الأعضاء</h3>
-                    <div class="squad-filter">
-                        <input type="text" id="memberSearch" placeholder="بحث بالاسم أو الكود..." oninput="filterMembersTable()">
-                        <select id="branchFilter" onchange="filterMembersTable()"><option value="">جميع المناطق</option>${appData.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}</select>
-                        <select id="squadFilter" onchange="filterMembersTable()"><option value="">جميع الطلايع</option>${appData.squads.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
-                        <button class="btn btn-primary" onclick="showAddMemberModal()"><i class="fas fa-plus"></i> إضافة عضو</button>
-                    </div>
-                    <div id="membersTable"></div>
-                </div>
-            `;
-            renderMembersTable();
-        }
+      function renderAdminMembers() {
+    const container = document.getElementById('adminPageContent');
+    const pendingCount = appData.joinRequests.filter(r => r.status === 'pending').length;
+    
+    container.innerHTML = `
+        <div class="card">
+            <h3><i class="fas fa-search"></i> البحث عن الأعضاء</h3>
+            <div class="squad-filter">
+                <input type="text" id="memberSearch" placeholder="بحث بالاسم أو الكود..." oninput="filterMembersTable()">
+                <select id="branchFilter" onchange="filterMembersTable()"><option value="">جميع المناطق</option>${appData.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('')}</select>
+                <select id="squadFilter" onchange="filterMembersTable()"><option value="">جميع الطلايع</option>${appData.squads.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
+                <button class="btn btn-primary" onclick="showAddMemberModal()"><i class="fas fa-plus"></i> إضافة عضو</button>
+                
+                <!-- زر إدارة طلبات الانضمام مع عداد -->
+                <button class="btn btn-success" onclick="showJoinRequestsList()" style="position: relative;">
+                    <i class="fas fa-users"></i> طلبات الانضمام
+                    <span id="pendingRequestsBadge" style="position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; display: ${pendingCount > 0 ? 'inline-block' : 'none'};">${pendingCount}</span>
+                </button>
+            </div>
+            <div id="membersTable"></div>
+        </div>
+    `;
+    renderMembersTable();
+    updatePendingRequestsBadge();  // تحديث العداد
+}
 
         function renderMembersTable() {
     const searchTerm = document.getElementById('memberSearch')?.value?.toLowerCase() || '';
@@ -2251,6 +2498,13 @@ function showTaskViewers(taskId) {
         window.showTaskViewers = showTaskViewers;
         window.onSquadFilterChange = onSquadFilterChange;
         window.renderSquadRankingCard = renderSquadRankingCard;
+        // إضافة الدوال الجديدة إلى النطاق العام (window)
+window.showJoinRequestModal = showJoinRequestModal;
+window.showJoinRequestsList = showJoinRequestsList;
+window.viewJoinRequestDetails = viewJoinRequestDetails;
+window.approveJoinRequest = approveJoinRequest;
+window.rejectJoinRequest = rejectJoinRequest;
+window.updatePendingRequestsBadge = updatePendingRequestsBadge;
         window.logout = logout;
 
         // Start the app
