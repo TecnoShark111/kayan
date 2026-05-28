@@ -582,25 +582,26 @@
         // ==================== FIREBASE OPERATIONS ====================
         
         // Save all data to Firebase
-        async function saveAllDataToFirebase() {
-            try {
-                await database.ref('appData').set({
-                    branches: appData.branches,
-                    squads: appData.squads,
-                    members: appData.members,
-                    tasks: appData.tasks,
-                    taskSubmissions: appData.taskSubmissions,
-                    messages: appData.messages,
-                    lastUpdated: new Date().toISOString()
-                });
-                console.log('✅ All data saved to Firebase');
-                return true;
-            } catch (error) {
-                console.error('❌ Error saving to Firebase:', error);
-                showToast('خطأ في حفظ البيانات', 'error');
-                return false;
-            }
-        }
+async function saveAllDataToFirebase() {
+    try {
+        await database.ref('appData').set({
+            branches: appData.branches,
+            squads: appData.squads,
+            members: appData.members,
+            tasks: appData.tasks,
+            taskSubmissions: appData.taskSubmissions,
+            messages: appData.messages,
+            joinRequests: appData.joinRequests,  // <-- أضف هذا السطر
+            lastUpdated: new Date().toISOString()
+        });
+        console.log('✅ All data saved to Firebase');
+        return true;
+    } catch (error) {
+        console.error('❌ Error saving to Firebase:', error);
+        showToast('خطأ في حفظ البيانات', 'error');
+        return false;
+    }
+}
 
         async function loadAllDataFromFirebase() {
     try {
